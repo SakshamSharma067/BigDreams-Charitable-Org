@@ -3,23 +3,37 @@ import Campaign from "../models/campaign.model.js";
 
 // Create Donation : /api/donation/create
 export const createDonation = async (req,res) => {
-    const {campaignId,amount,paymentMethod,transactionId} = req.body;
+    const {campaignId, amount, paymentMethod, transactionId, donorName, donorEmail} = req.body;
 
     try {
-        const campaign = await Campaign.findById(campaignId);
-        if(!campaign){
-            return res.status(404).json({message: "Campaign not found"});
+        // Only validate campaign if campaignId is provided
+        if (campaignId) {
+            const campaign = await Campaign.findById(campaignId);
+            if(!campaign){
+                return res.status(404).json({message: "Campaign not found"});
+            }
         }
+
         const donation = await Donation.create({
             campaignId,
             amount,
             paymentMethod,
             transactionId,
+            donorName,
+            donorEmail
         });
-        return res.status(201).json({success: true,donation});
+
+        // If this is a campaign donation, update the campaign amount
+        if (campaignId) {
+            const campaign = await Campaign.findById(campaignId);
+            campaign.currentAmount += parseFloat(amount);
+            await campaign.save();
+        }
+
+        return res.status(201).json({success: true, donation});
     } catch (error) {
         console.log(error.message);
-        return res.status(500).json({success: false,message: error.message});
+        return res.status(500).json({success: false, message: error.message});
     }
 }
 
@@ -27,14 +41,14 @@ export const createDonation = async (req,res) => {
 export const getAllDonations = async (req,res) => {
     try {
         const donations = await Donation.find().populate("campaignId").sort({createdAt: -1});
-        return res.status(200).json({success: true,donations});
+        return res.status(200).json({success: true, donations});
     } catch (error) {
         console.log(error.message);
-        return res.status(500).json({success: false,message: error.message});
+        return res.status(500).json({success: false, message: error.message});
     }
 }
 
-// Get Donations by ID : /api/donation/id
+// Get Donations by ID : /api/donation/:id
 export const getDonationsById = async (req,res) => {
     const {id} = req.params;
     try {
@@ -42,35 +56,23 @@ export const getDonationsById = async (req,res) => {
         if(!donation){
             return res.status(404).json({message: "Donation not found"});
         }
-        return res.status(200).json({success: true,donation});
+        return res.status(200).json({success: true, donation});
     } catch (error) {
         console.log(error.message);
-        return res.status(500).json({success: false,message: error.message});
+        return res.status(500).json({success: false, message: error.message});
     }
 }
 
-// Get Donations by Campaign ID : /api/donation/
-export const getDonationsByCampaignId = async (req,res) => {
-    const {campaignId} = req.params;
-    try {
-        const donations = await Donation.find({campaignId}).populate("campaignId").sort({createdAt: -1});
-        return res.status(200).json({success: true,donations});
-    } catch (error) {
-        console.log(error.message);
-        return res.status(500).json({success: false,message: error.message});
-    }
-}
-
-// Get Donation Status : /api/donation/status
+// Get Donation Status : /api/donation/status/:campaignId
 export const getDonationStatus = async (req,res) => {
     const {campaignId} = req.params;
     try {
         const donations = await Donation.find({campaignId}).populate("campaignId").sort({createdAt: -1});
         const totalDonations = donations.reduce((acc,donation)=>acc+donation.amount,0);
         const totalDonationsCount = donations.length;
-        return res.status(200).json({success: true,totalDonations,totalDonationsCount});
+        return res.status(200).json({success: true, totalDonations, totalDonationsCount});
     } catch (error) {
         console.log(error.message);
-        return res.status(500).json({success: false,message: error.message});
+        return res.status(500).json({success: false, message: error.message});
     }
 }

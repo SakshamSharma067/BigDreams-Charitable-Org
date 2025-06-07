@@ -8,16 +8,25 @@ const donationSchema = new mongoose.Schema({
     campaignId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Campaign",
-        required: true,
+        required: false,
     },
     paymentMethod: {
         type: String,
-        enum: ["cash","upi","card"],
+        enum: ["card", "paypal", "bank", "cash", "upi"],
         required: true,
     },
     transactionId: {
         type: String,
+        required: true,
     },
+    donorName: {
+        type: String,
+        required: true,
+    },
+    donorEmail: {
+        type: String,
+        required: true,
+    }
 },{timestamps: true})
 
 const Donation = mongoose.model("Donation",donationSchema)

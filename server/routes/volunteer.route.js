@@ -1,14 +1,23 @@
-import express from "express";
-import { createVolunteer, getAllVolunteers, getVolunteerById, updateVolunteer, deleteVolunteer, getVolunteerStats } from "../controllers/volunteer.controller.js";
-import { authUser } from "../middleware/authVolunteer.js";
+import { Router } from 'express';
+import { 
+    createVolunteer, 
+    getAllVolunteers, 
+    getVolunteerById,
+    updateVolunteer,
+    deleteVolunteer 
+} from '../controllers/volunteer.controller.js';
+import { isAuthenticated, authorizeRoles } from '../middleware/auth.js';
+import upload from '../middleware/multer.js';
 
-const volunteerRouter = express.Router();
+const volunteerRouter = Router();
 
-volunteerRouter.post("/create",authUser,createVolunteer);
-volunteerRouter.get("/get-all",authUser,getAllVolunteers);
-volunteerRouter.get("/id",authUser,getVolunteerById);
-volunteerRouter.put("/update",authUser,updateVolunteer);
-volunteerRouter.delete("/delete",authUser,deleteVolunteer);
-volunteerRouter.get("/stats",authUser,getVolunteerStats);
+// Public routes
+volunteerRouter.get('/get-all', getAllVolunteers);
+volunteerRouter.get('/:id', getVolunteerById);
+
+// Protected routes
+volunteerRouter.post('/register', isAuthenticated, createVolunteer);
+volunteerRouter.put('/:id', isAuthenticated, authorizeRoles('volunteer', 'admin'), upload.single('image'), updateVolunteer);
+volunteerRouter.delete('/:id', isAuthenticated, authorizeRoles('admin'), deleteVolunteer);
 
 export default volunteerRouter;

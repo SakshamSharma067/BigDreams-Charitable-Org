@@ -1,223 +1,246 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAppContext } from '../context/AppContext';
 
 const Campaigns = () => {
-  // Sample data - replace with actual data from your backend
-  const allCampaigns = [
-    {
-      id: 1,
-      title: "Clean Water Initiative",
-      description: "Providing clean water to rural communities in need. Our initiative aims to install water purification systems and wells in areas with limited access to safe drinking water.",
-      image: "/images/water.jpg",
-      raised: 15000,
-      goal: 20000,
-      category: "Health",
-      location: "Rural India",
-      daysLeft: 45,
-    },
-    {
-      id: 2,
-      title: "Education for All",
-      description: "Supporting underprivileged children's education by providing school supplies, uniforms, and funding for teachers in low-income areas.",
-      image: "/images/education.jpg",
-      raised: 25000,
-      goal: 50000,
-      category: "Education",
-      location: "Kenya",
-      daysLeft: 60,
-    },
-    {
-      id: 3,
-      title: "Food Security Program",
-      description: "Ensuring no one goes to bed hungry by establishing sustainable food banks and supporting local farmers in vulnerable communities.",
-      image: "/images/food.jpg",
-      raised: 10000,
-      goal: 30000,
-      category: "Food",
-      location: "Brazil",
-      daysLeft: 30,
-    },
-    {
-      id: 4,
-      title: "Medical Aid Relief",
-      description: "Providing essential medical supplies and healthcare services to underserved communities and emergency response teams.",
-      image: "/images/medical.jpg",
-      raised: 75000,
-      goal: 100000,
-      category: "Health",
-      location: "Global",
-      daysLeft: 90,
-    },
-    {
-      id: 5,
-      title: "Women Empowerment Initiative",
-      description: "Supporting women entrepreneurs with microloans and business training to help them achieve financial independence.",
-      image: "/images/women.jpg",
-      raised: 35000,
-      goal: 60000,
-      category: "Social",
-      location: "Bangladesh",
-      daysLeft: 75,
-    },
-    {
-      id: 6,
-      title: "Environmental Conservation",
-      description: "Protecting endangered ecosystems through conservation efforts and community education programs.",
-      image: "/images/environment.jpg",
-      raised: 45000,
-      goal: 80000,
-      category: "Environment",
-      location: "Amazon Rainforest",
-      daysLeft: 120,
-    },
-  ];
+  const { 
+    campaigns, 
+    isLoading, 
+    error, 
+    isVolunteer,
+    isAuthenticated,
+    fetchCampaign,
+    deleteCampaign,
+    user
+  } = useAppContext();
 
-  const categories = ["All", "Health", "Education", "Food", "Social", "Environment"];
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("progress"); // progress, daysLeft, goal
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredCampaigns, setFilteredCampaigns] = useState([]);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
-  // Filter and sort campaigns
-  const filteredCampaigns = allCampaigns
-    .filter(campaign => 
-      (selectedCategory === "All" || campaign.category === selectedCategory) &&
-      (campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       campaign.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "progress":
-          return (b.raised / b.goal) - (a.raised / a.goal);
-        case "daysLeft":
-          return a.daysLeft - b.daysLeft;
-        case "goal":
-          return b.goal - a.goal;
-        default:
-          return 0;
+  useEffect(() => {
+    fetchCampaign();
+  }, []);
+
+  useEffect(() => {
+    if (campaigns) {
+      const filtered = campaigns.filter(campaign =>
+        campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        campaign.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCampaigns(filtered);
+    }
+  }, [searchTerm, campaigns]);
+
+  const handleDelete = async (campaignId) => {
+    if (deleteConfirm === campaignId) {
+      const result = await deleteCampaign(campaignId);
+      if (result.success) {
+        setDeleteConfirm(null);
       }
-    });
+    } else {
+      setDeleteConfirm(campaignId);
+    }
+  };
+
+  // Check if the user is the owner of the campaign
+  const isOwner = (campaign) => {
+    if (!user || !campaign) return false;
+    
+    const userId = user.id || user._id;
+    const creatorId = campaign.createdBy?._id || campaign.createdBy;
+    
+    return userId === creatorId;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-red-500 text-center">
+          <h2 className="text-2xl font-bold mb-2">Error</h2>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-purple-50 pt-24 pb-12">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-purple-900 mb-4">Active Campaigns</h1>
-          <p className="text-xl text-purple-600 max-w-2xl mx-auto">
-            Browse our current campaigns and help make a difference in the causes you care about.
-          </p>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="mt-8 mb-12">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            {/* Categories */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    selectedCategory === category
-                      ? "bg-purple-600 text-white"
-                      : "bg-white text-purple-600 hover:bg-purple-100"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-
-            {/* Sort and Search */}
-            <div className="flex gap-4 w-full md:w-auto">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 rounded-full bg-white text-purple-600 border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              >
-                <option value="progress">Progress</option>
-                <option value="daysLeft">Days Left</option>
-                <option value="goal">Goal Amount</option>
-              </select>
-
-              <input
-                type="text"
-                placeholder="Search campaigns..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 md:w-64 px-4 py-2 rounded-full bg-white text-purple-600 border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              />
-            </div>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 mb-4">Campaigns</h1>
+            <p className="text-xl text-gray-600">Support our ongoing initiatives and make a difference.</p>
           </div>
-        </div>
-
-        {/* Campaign Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredCampaigns.map((campaign) => (
-            <div
-              key={campaign.id}
-              className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300"
+          {isVolunteer() && (
+            <Link
+              to="/campaign/create"
+              className="inline-flex items-center px-6 py-3 text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 hover:from-blue-600 hover:via-teal-600 hover:to-emerald-600 transition-colors duration-300 shadow-md hover:shadow-lg"
             >
-              <div className="h-48 overflow-hidden relative">
-                <img
-                  src={campaign.image}
-                  alt={campaign.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 right-4 bg-purple-600 text-white px-3 py-1 rounded-full text-sm">
-                  {campaign.category}
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-purple-900">{campaign.title}</h3>
-                  <span className="text-sm text-purple-600">{campaign.daysLeft} days left</span>
-                </div>
-                <p className="text-purple-600 mb-4 line-clamp-2">{campaign.description}</p>
-                <div className="mb-4">
-                  <div className="h-2 bg-purple-100 rounded-full">
-                    <div
-                      className="h-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
-                      style={{ width: `${(campaign.raised / campaign.goal) * 100}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between mt-2 text-sm">
-                    <span className="text-purple-600">${campaign.raised.toLocaleString()} raised</span>
-                    <span className="text-purple-600">${campaign.goal.toLocaleString()} goal</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-purple-600">📍 {campaign.location}</span>
-                  <span className="text-sm text-purple-600">
-                    {Math.round((campaign.raised / campaign.goal) * 100)}% funded
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/campaigns/${campaign.id}`}
-                    className="flex-1 text-center py-2 px-4 bg-purple-100 text-purple-600 rounded-full hover:bg-purple-200 transition-colors duration-300"
-                  >
-                    Learn More
-                  </Link>
-                  <Link
-                    to={`/donate/${campaign.id}`}
-                    className="flex-1 text-center py-2 px-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-full hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
-                  >
-                    Donate
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Create Campaign
+            </Link>
+          )}
         </div>
 
-        {/* No Results */}
-        {filteredCampaigns.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium text-purple-900 mb-2">No campaigns found</h3>
-            <p className="text-purple-600">Try adjusting your search or filter criteria</p>
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search campaigns..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 pl-10 pr-4 text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Campaigns Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredCampaigns.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
+              </svg>
+              <h3 className="mt-2 text-lg font-medium text-gray-900">No campaigns found</h3>
+              <p className="mt-1 text-gray-600">
+                {isVolunteer() ? "Get started by creating a new campaign." : "Check back later for new campaigns."}
+              </p>
+              {isVolunteer() && (
+                <div className="mt-6">
+                  <Link
+                    to="/campaign/create"
+                    className="inline-flex items-center px-6 py-3 text-base font-medium rounded-md text-white bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 hover:from-blue-600 hover:via-teal-600 hover:to-emerald-600 transition-colors duration-300 shadow-md hover:shadow-lg"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Create Campaign
+                  </Link>
+                </div>
+              )}
+            </div>
+          ) : (
+            filteredCampaigns.map((campaign) => (
+              <div
+                key={campaign._id}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              >
+                {/* Campaign Image */}
+                <div className="h-48 overflow-hidden relative">
+                  <img
+                    src={campaign.images?.[0] || '/placeholder-campaign.jpg'}
+                    alt={campaign.title}
+                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+                  />
+                  {isOwner(campaign) && (
+                    <div className="absolute top-2 right-2 flex space-x-2">
+                      <Link
+                        to={`/campaign/edit/${campaign._id}`}
+                        className="bg-yellow-500 p-2 rounded-full text-white hover:bg-yellow-600 transition-colors duration-300"
+                        title="Edit Campaign"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(campaign._id)}
+                        className={`p-2 rounded-full text-white transition-colors duration-300 ${
+                          deleteConfirm === campaign._id
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-red-500 hover:bg-red-600'
+                        }`}
+                        title={deleteConfirm === campaign._id ? 'Confirm Delete' : 'Delete Campaign'}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {deleteConfirm === campaign._id ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Campaign Content */}
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-teal-500 mb-2">{campaign.title}</h3>
+                  <p className="text-gray-600 mb-4 line-clamp-2">{campaign.description}</p>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 h-2.5 rounded-full"
+                        style={{
+                          width: `${Math.min((campaign.currentAmount / campaign.targetAmount) * 100, 100)}%`
+                        }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-600 mt-2">
+                      <span>${campaign.currentAmount?.toLocaleString()}</span>
+                      <span>Goal: ${campaign.targetAmount?.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Campaign Details */}
+                  <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+                    <span>Start: {new Date(campaign.startDate).toLocaleDateString()}</span>
+                    <span>End: {new Date(campaign.endDate).toLocaleDateString()}</span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-between items-center">
+                    <Link
+                      to={`/campaign/${campaign._id}`}
+                      className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300"
+                    >
+                      View Details
+                    </Link>
+                    {isAuthenticated() && (
+                      <Link
+                        to={`/donate/${campaign._id}`}
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 hover:from-blue-600 hover:via-teal-600 hover:to-emerald-600 transition-colors duration-300"
+                      >
+                        Donate Now
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
