@@ -86,19 +86,46 @@ const Volunteer = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
     try {
-      const response = await axios.post('/api/user/register', formData);
+      // Check if user exists and get their role
+      const checkUserResponse = await axios.post('/api/user/check-user', { 
+        email: formData.email,
+        password: formData.password 
+      });
       
-      if (response.data.success) {
-        toast.success('Volunteer registration successful! Please log in.');
-        navigate('/login');
+      if (checkUserResponse.data.exists) {
+        if (checkUserResponse.data.role === 'volunteer') {
+          toast.error('You are already registered as a volunteer. Please login.');
+          navigate('/login');
+          return;
+        }
+
+        // User exists but is not a volunteer - upgrade their role
+        const upgradeResponse = await axios.post('/api/user/upgrade-to-volunteer', {
+          email: formData.email,
+          password: formData.password,
+          ...formData
+        });
+
+        if (upgradeResponse.data.success) {
+          toast.success('Successfully upgraded to volunteer! Please login again.');
+          navigate('/login');
+        } else {
+          toast.error(upgradeResponse.data.message || 'Failed to upgrade to volunteer');
+        }
       } else {
-        toast.error(response.data.message || 'Registration failed');
+        // New user registration
+        const response = await axios.post('/api/user/register', {
+          ...formData,
+          role: 'volunteer'
+        });
+        
+        if (response.data.success) {
+          toast.success('Volunteer registration successful! Please log in.');
+          navigate('/login');
+        } else {
+          toast.error(response.data.message || 'Registration failed');
+        }
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to register');

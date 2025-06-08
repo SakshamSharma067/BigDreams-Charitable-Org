@@ -133,7 +133,7 @@ const Home = () => {
                     {isAuthenticated() && (
                       <Link
                         to={`/donate/${campaign._id}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-500 hover:bg-green-600 transition-colors duration-300"
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 hover:from-blue-600 hover:via-teal-600 hover:to-emerald-600 transition-colors duration-300"
                       >
                         Donate Now
                       </Link>

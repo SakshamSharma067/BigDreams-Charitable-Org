@@ -189,4 +189,81 @@ export const logout = async (req, res)=>{
         console.log(error.message);
         res.json({ success: false, message: error.message });
     }
+
 }
+
+// Check if user exists and get role : /api/user/check-user
+export const checkUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                exists: false
+            });
+        }
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            exists: true,
+            role: user.role
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// Upgrade user to volunteer : /api/user/upgrade-to-volunteer
+export const upgradeToVolunteer = async (req, res) => {
+    try {
+        const { email, password, ...volunteerData } = req.body;
+
+        // Find user and verify password
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid credentials"
+            });
+        }
+
+        // Update user role and add volunteer data
+        user.role = 'volunteer';
+        Object.assign(user, volunteerData);
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully upgraded to volunteer"
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
