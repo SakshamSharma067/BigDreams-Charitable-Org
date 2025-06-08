@@ -116,23 +116,49 @@ const Volunteer = () => {
     useEffect(() => {
       const fetchVolunteerData = async () => {
         try {
-          const [campaignsRes, recentActivityRes] = await Promise.all([
+          const [campaignsRes, donationsRes] = await Promise.all([
             axios.get('/api/campaign/get-all'),
-            axios.get('/api/activity/get-recent')
+            axios.get('/api/donation/get-all')
           ]);
 
           if (campaignsRes.data.success) {
             const activeCampaigns = campaignsRes.data.campaigns.filter(c => c.status === 'active');
             setCampaigns(activeCampaigns);
             setTotalAmountRaised(activeCampaigns.reduce((total, campaign) => total + (campaign.currentAmount || 0), 0));
-            setTotalDonors(recentActivityRes.data.length);
           }
 
-          if (recentActivityRes.data.success) {
-            setRecentActivity(recentActivityRes.data);
+          if (donationsRes.data.success) {
+            setTotalDonors(donationsRes.data.donations.length);
+            // Create recent activity from donations
+            const recentDonations = donationsRes.data.donations
+              .slice(0, 5)
+              .map(donation => ({
+                type: 'donation',
+                title: `New Donation of $${donation.amount}`,
+                description: donation.campaignId ? `Donated to ${donation.campaignId.title}` : 'General Donation',
+                date: donation.createdAt
+              }));
+
+            // Add campaign creations to activity
+            const recentCampaigns = campaignsRes.data.campaigns
+              .slice(0, 5)
+              .map(campaign => ({
+                type: 'campaign',
+                title: `New Campaign Created`,
+                description: campaign.title,
+                date: campaign.createdAt
+              }));
+
+            // Combine and sort activities
+            const allActivity = [...recentDonations, ...recentCampaigns]
+              .sort((a, b) => new Date(b.date) - new Date(a.date))
+              .slice(0, 5);
+
+            setRecentActivity(allActivity);
           }
         } catch (error) {
           console.error('Error fetching volunteer data:', error);
+          toast.error('Failed to fetch dashboard data');
         }
       };
 
@@ -226,10 +252,8 @@ const Volunteer = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {isVolunteer() ? (
-          // Show Volunteer Dashboard
           <VolunteerDashboard />
         ) : (
-          // Show Volunteer Registration
           <>
             {/* Header */}
             <div className="text-center mb-12">
