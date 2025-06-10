@@ -38,16 +38,16 @@ const Contact = () => {
   const contactInfo = [
     {
       title: "Main Office",
-      address: "Sevakriti Office, New Delhi, Delhi, India",
+      address: "Big Dreams Office, New Delhi, Delhi, India",
       phone: "+91 1234567890",
-      email: "info@sevakriti.org",
+      email: "info@bigdreams.org",
       hours: "Mon-Fri: 9:00 AM - 6:00 PM"
     },
     {
       title: "Donation Center",
-      address: "Sevakriti Donation Center, New Delhi, Delhi, India",
+      address: "Big Dreams Donation Center, New Delhi, Delhi, India",
       phone: "+91 1234567890",
-      email: "info@sevakriti.org",
+      email: "info@bigdreams.org",
       hours: "Mon-Sat: 8:00 AM - 8:00 PM"
     }
   ];

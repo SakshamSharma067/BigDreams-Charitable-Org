@@ -25,7 +25,7 @@ const PORT = process.env.PORT || 5000;
         const allowedOrigins = [
              process.env.FRONTEND_URL, 
             'http://localhost:5173',
-            'https://sevakriti-qlw4.vercel.app'
+            'https://bigdreams-qlw4.vercel.app'
         ];
 
         // Middleware
