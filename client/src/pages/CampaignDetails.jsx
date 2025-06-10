@@ -45,10 +45,9 @@ const CampaignDetails = () => {
     }
 
     try {
-      // First create the donation record
       const donationResponse = await axios.post('/api/donation/create', {
         amount,
-        paymentMethod: 'card', // Default to card payment
+        paymentMethod: 'card',
         transactionId: Date.now().toString(),
         campaignId: campaign._id,
         donorName: user.name,

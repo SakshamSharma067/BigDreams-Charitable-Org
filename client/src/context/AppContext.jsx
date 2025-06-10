@@ -127,7 +127,6 @@ export const AppContextProvider = ({children}) => {
         try {
             const {data} = await axios.get('/api/user/logout');
             setUser(null);
-            // Clear all data
             setCampaigns(null);
             setVolunteer(null);
             setDonation(null);

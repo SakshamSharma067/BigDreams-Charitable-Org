@@ -46,7 +46,6 @@ const CreateCampaign = () => {
     setSuccessMessage('');
 
     try {
-      // Validation
       if (!formData.title || !formData.description || !formData.targetAmount || !formData.startDate || !formData.endDate) {
         setError('All fields are required');
         return;
@@ -67,17 +66,14 @@ const CreateCampaign = () => {
         return;
       }
 
-      // Create FormData object for file upload
       const campaignFormData = new FormData();
       
-      // Add all form fields
       campaignFormData.append('title', formData.title.trim());
       campaignFormData.append('description', formData.description.trim());
       campaignFormData.append('targetAmount', formData.targetAmount);
       campaignFormData.append('startDate', formData.startDate);
       campaignFormData.append('endDate', formData.endDate);
       
-      // Add images
       formData.images.forEach(file => {
         campaignFormData.append('images', file);
       });
@@ -87,12 +83,10 @@ const CreateCampaign = () => {
       
       if (result.success) {
         setSuccessMessage('Campaign created successfully!');
-        // Wait for 1.5 seconds before navigating to show the success message
         setTimeout(() => {
           navigate('/campaign');
         }, 1500);
       } else {
-        // Handle specific error messages
         const errorMessage = result.message || 'Failed to create campaign';
         if (errorMessage.includes('Authentication required')) {
           setError('Please log in again to create a campaign');
@@ -211,42 +205,60 @@ const CreateCampaign = () => {
               <label htmlFor="images" className="block text-sm font-medium text-gray-700">
                 Campaign Images
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-500 transition-all duration-300">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="images"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-blue-500 hover:text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+              <div className="mt-1 flex flex-col space-y-4">
+                <div className="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-500 transition-all duration-300">
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
                     >
-                      <span>Upload files</span>
-                      <input
-                        id="images"
-                        name="images"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="sr-only"
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
+                    </svg>
+                    <div className="flex text-sm text-gray-600">
+                      <label
+                        htmlFor="images"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-blue-500 hover:text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                      >
+                        <span>Upload files</span>
+                        <input
+                          id="images"
+                          name="images"
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="sr-only"
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                 </div>
+                {/* Show uploaded file names */}
+                {formData.images.length > 0 && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Uploaded Images:</p>
+                    <ul className="space-y-1">
+                      {formData.images.map((file, index) => (
+                        <li key={index} className="text-sm text-gray-600 flex items-center">
+                          <svg className="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          {file.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
 
