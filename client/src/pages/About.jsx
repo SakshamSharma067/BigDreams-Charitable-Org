@@ -51,7 +51,7 @@ const About = () => {
     {
       year: "2018",
       title: "Foundation Established",
-      description: "HopeHarbor was founded with a mission to create lasting positive change."
+      description: "BigDreams was founded with a mission to create lasting positive change."
     },
     {
       year: "2019",
@@ -84,7 +84,7 @@ const About = () => {
             Our Story
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            At HopeHarbor, we believe in the power of collective action to create meaningful change in the world.
+            At BigDreams, we believe in the power of collective action to create meaningful change in the world.
             Our journey began with a simple idea: everyone deserves a chance at a better life.
           </p>
         </div>

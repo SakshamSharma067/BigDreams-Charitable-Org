@@ -106,25 +106,20 @@ const EditCampaign = () => {
       return;
     }
 
-    // Create FormData object for file upload
     const campaignFormData = new FormData();
     
-    // Add basic fields
     campaignFormData.append('title', formData.title.trim());
     campaignFormData.append('description', formData.description.trim());
     campaignFormData.append('targetAmount', formData.targetAmount);
     campaignFormData.append('startDate', formData.startDate);
     campaignFormData.append('endDate', formData.endDate);
 
-    // Handle images
     if (formData.images.length > 0) {
       if (formData.images[0] instanceof File) {
-        // If new files were selected, append them
         formData.images.forEach(file => {
           campaignFormData.append('images', file);
         });
       } else {
-        // Keep the existing images
         formData.images.forEach(imageUrl => {
           campaignFormData.append('existingImages', imageUrl);
         });
