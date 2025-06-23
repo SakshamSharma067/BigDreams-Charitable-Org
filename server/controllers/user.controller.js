@@ -231,7 +231,7 @@ export const checkUser = async (req, res) => {
 // Upgrade user to volunteer : /api/user/upgrade-to-volunteer
 export const upgradeToVolunteer = async (req, res) => {
     try {
-        const { email, password, ...volunteerData } = req.body;
+        const { name ,email, password,phone, address, city, state, zip, ...volunteerData } = req.body;
 
         // Find user and verify password
         const user = await User.findOne({ email });
@@ -253,11 +253,21 @@ export const upgradeToVolunteer = async (req, res) => {
         // Update user role and add volunteer data
         user.role = 'volunteer';
         Object.assign(user, volunteerData);
-        await user.save();
+        const volunteer = await Volunteer.create({
+                    name,
+                    email,
+                    phone,
+                    address,
+                    city,
+                    state,
+                    zip
+                });
 
+        await user.save();
         return res.status(200).json({
             success: true,
-            message: "Successfully upgraded to volunteer"
+            message: "Successfully upgraded to volunteer",
+            volunteer
         });
     } catch (error) {
         console.error(error);

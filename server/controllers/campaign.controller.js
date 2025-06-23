@@ -11,7 +11,7 @@ const handleError = (error, res) => {
     return res.status(500).json({ success: false, message: error.message });
 };
 
-// Create a new campaign
+// Create a new campaign : /api/campaign/create
 export const createCampaign = async (req, res) => {
     try {
         const { title, description, targetAmount, startDate, endDate } = req.body;
@@ -52,7 +52,7 @@ export const createCampaign = async (req, res) => {
     }
 };
 
-// Get all campaigns
+// Get all campaigns : /api/campaign/get-all
 export const getAllCampaigns = async (req, res) => {
     try {
         const campaigns = await Campaign.find()
@@ -68,7 +68,7 @@ export const getAllCampaigns = async (req, res) => {
     }
 };
 
-// Get campaign by ID
+// Get campaign by ID : /api/campaign/:id
 export const getCampaignById = async (req, res) => {
     try {
         const campaign = await Campaign.findById(req.params.id)
@@ -90,7 +90,7 @@ export const getCampaignById = async (req, res) => {
     }
 };
 
-// Update campaign
+// Update campaign : /api/campaign/:id (PUT)
 export const updateCampaign = async (req, res) => {
     try {
         const { id } = req.params;
@@ -105,7 +105,6 @@ export const updateCampaign = async (req, res) => {
             });
         }
 
-        // Check ownership
         if (campaign.createdBy.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -113,7 +112,6 @@ export const updateCampaign = async (req, res) => {
             });
         }
 
-        // Handle image upload
         let imageUrls = [];
         if (req.files && req.files.images) {
             const uploadPromises = req.files.images.map(file => 
@@ -125,7 +123,6 @@ export const updateCampaign = async (req, res) => {
             imageUrls = uploadResults.map(result => result.secure_url);
         }
 
-        // If there are existing images in the request
         if (req.body.existingImages) {
             const existingImages = Array.isArray(req.body.existingImages) 
                 ? req.body.existingImages 
@@ -133,7 +130,6 @@ export const updateCampaign = async (req, res) => {
             imageUrls = [...existingImages, ...imageUrls];
         }
 
-        // Update campaign
         const updatedCampaign = await Campaign.findByIdAndUpdate(
             id,
             {
@@ -162,7 +158,7 @@ export const updateCampaign = async (req, res) => {
     }
 };
 
-// Delete campaign
+// Delete campaign : /api/campaign/delete/:id
 export const deleteCampaign = async (req, res) => {
     try {
         const campaign = await Campaign.findById(req.params.id);
@@ -174,7 +170,6 @@ export const deleteCampaign = async (req, res) => {
             });
         }
 
-        // Check if user is authorized to delete
         if (campaign.createdBy.toString() !== req.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -182,7 +177,6 @@ export const deleteCampaign = async (req, res) => {
             });
         }
 
-        // Delete images from cloudinary
         const deletePromises = campaign.images.map(imageUrl => {
             const publicId = imageUrl.split('/').pop().split('.')[0];
             return cloudinary.uploader.destroy(publicId);
@@ -200,7 +194,7 @@ export const deleteCampaign = async (req, res) => {
     }
 };
 
-// Donate to campaign
+// Donate to campaign : /api/campaign/:id/donate
 export const donateToCompaign = async (req, res) => {
     try {
         const { amount } = req.body;

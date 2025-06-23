@@ -60,12 +60,10 @@ const campaignSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Virtual for campaign progress
 campaignSchema.virtual('progress').get(function() {
     return (this.currentAmount / this.targetAmount) * 100;
 });
 
-// Pre-validate middleware to check dates
 campaignSchema.pre('validate', function(next) {
     if (this.startDate && this.endDate) {
         const startDate = new Date(this.startDate);

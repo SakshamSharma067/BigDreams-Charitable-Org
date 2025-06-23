@@ -10,13 +10,11 @@ import campaignRouter from './routes/campaign.route.js';
 import donationRouter from './routes/donation.route.js';
 import volunteerRouter from './routes/volunteer.route.js';
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Initialize app
 (async () => {
     try {
         // Connect to database and cloudinary
@@ -39,18 +37,15 @@ const PORT = process.env.PORT || 5000;
             allowedHeaders: ['Content-Type', 'Authorization']
         }));
 
-        // Health check route
         app.get('/', (req, res) => {
             res.send('Backend is running');
         });
 
-        // Routes
         app.use('/api/user', userRouter);
         app.use('/api/campaign', campaignRouter);
         app.use('/api/donation', donationRouter);
         app.use('/api/volunteer', volunteerRouter);
 
-        // Error handling middleware
         app.use((err, req, res, next) => {
             console.error(err.stack);
             res.status(err.status || 500).json({
@@ -59,7 +54,6 @@ const PORT = process.env.PORT || 5000;
             });
         });
 
-        // Start server
         app.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });

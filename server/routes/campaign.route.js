@@ -7,7 +7,7 @@ import {
     deleteCampaign,
     donateToCompaign
 } from "../controllers/campaign.controller.js";
-import { isAuthenticated, authorizeRoles } from "../middleware/auth.js";
+import { isAuthenticated} from "../middleware/auth.js";
 import upload from "../middleware/multer.js";
 
 const campaignRouter = Router();
